@@ -1,3 +1,4 @@
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,10 +50,22 @@ public class ParkingLot implements Parking {
         return ticket;
     }
 
+    @SuppressWarnings("static-access")
     @Override
-    public int unPark(Ticket ticket, ParkingChargeStretegy ParkingChargeStretegy) throws InvalidVehicleNumberException {
+    public long unPark(Ticket ticket, ParkingChargeStretegy ParkingChargeStretegy)
+            throws InvalidVehicleNumberException {
+        VehicleSize vehicleSize = ticket.getVehicleSize();
+        LocalDateTime date = ticket.getDate();
+        LocalDateTime currentDateTime = LocalDateTime.now().plusHours(5);
+        Duration duration = Duration.between(date, currentDateTime);
 
-        throw new UnsupportedOperationException("Unimplemented method 'unPark'");
+        System.out.println("Duration is " + duration);
+
+        if (vehicleSize == VehicleSize.FOURWHEELER) {
+            return ParkingChargeStretegy.FOURWHEELER.getCharge() * duration.toHours();
+        } else {
+            return ParkingChargeStretegy.TWOWHEELER.getCharge() * duration.toHours();
+        }
     }
 
     private Slot getNextAvailableFourWheelerSlot() throws ParkingFullException {
