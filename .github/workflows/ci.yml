@@ -9,8 +9,9 @@ on:
       - main
 
 jobs:
-  build:
+  lint_and_check:
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
 
     steps:
       - name: Checkout code
@@ -30,5 +31,30 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven
 
-      - name: Build with Maven
-        run: mvn clean verify
+      - name: Run lint and bug checks
+        run: mvn clean verify pmd:check spotbugs:check checkstyle:check
+
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven
+
+      - name: Build and deploy
+        run: mvn clean install
